@@ -48,17 +48,17 @@
         /* 讓文字浮動在圖片上 */
         .emotion-overlay {
             position: absolute;
-            color: #F1C40F;
+            color: #FFFFFF;
             font-size: 1em;
             font-weight: bold;
-            text-shadow: 2px 2px 4px #000;
+            text-shadow: 2px 2px 5px #000, -2px -2px 5px #000, 2px -2px 5px #000, -2px 2px 5px #000;
             pointer-events: none; /* 防止遮擋點擊 */
         }
-        /* 四個角落的位置設定 */
-        #pos-0 { top: 25%; left: 20%; }
-        #pos-1 { top: 25%; right: 20%; }
-        #pos-2 { bottom: 25%; left: 20%; }
-        #pos-3 { bottom: 25%; right: 20%; }
+        /* 微調座標以精確對準圖示中心 (幸運草, 紅雲, 紫心, 水滴) */
+        #pos-0 { top: 22%; left: 22%; transform: translate(-50%, -50%); }
+        #pos-1 { top: 22%; right: 22%; transform: translate(50%, -50%); }
+        #pos-2 { bottom: 22%; left: 22%; transform: translate(-50%, 50%); }
+        #pos-3 { bottom: 22%; right: 22%; transform: translate(50%, 50%); }
 
         .btn-container {
             display: grid;
@@ -86,7 +86,14 @@
 <body>
     <h2>🏆 共感戰場：即時投票</h2>
     
-    <img src="hexagon_base.png" class="header-img" alt="戰場地圖" onerror="this.src='https://via.placeholder.com/350x350/333/F1C40F?text=Battlefield+Map'">
+    <div class="map-container">
+        <img src="hexagon_base.png" class="header-img" alt="戰場地圖" onerror="this.src='https://via.placeholder.com/350x350/333/F1C40F?text=Battlefield+Map'">
+        <!-- 圖片上的浮動情緒文字 -->
+        <div class="emotion-overlay" id="pos-0"></div>
+        <div class="emotion-overlay" id="pos-1"></div>
+        <div class="emotion-overlay" id="pos-2"></div>
+        <div class="emotion-overlay" id="pos-3"></div>
+    </div>
 
     <div class="team-selector">
         <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">第一步：選擇您的隊伍</div>
@@ -132,8 +139,13 @@
             list.innerHTML = data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
             
             data.forEach((item, i) => {
+                // 更新按鈕文字
                 const btn = document.getElementById(`btn-${i}`);
                 if(btn) btn.innerText = `${["①","②","③","④"][i]} ${item.emotion}`;
+                
+                // 同步更新圖片上的浮動文字
+                const pos = document.getElementById(`pos-${i}`);
+                if(pos) pos.innerText = item.emotion;
             });
         });
 
