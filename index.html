@@ -176,6 +176,9 @@
         function confirmInfo() {
             const infoStatus = document.getElementById('info-status');
             identityConfirmed = true;
+            // 鎖定「確定身分」按鈕
+            const confirmBtn = document.getElementById('confirm-btn');
+            if (confirmBtn) confirmBtn.disabled = true;
             
             if (!emotionsReceived) {
                 infoStatus.innerText = "身分已確認！請等待新情緒抽籤...";
@@ -210,6 +213,10 @@
             emotionsReceived = true;  // 已收到情緒資料
             const data = msg.data.data;
             currentEmotionsData = data; // 儲存情緒資料
+            // 重置「確定身分」按鈕狀態，如果學生還沒確認過身分
+            const confirmBtn = document.getElementById('confirm-btn');
+            if (confirmBtn && !identityConfirmed) confirmBtn.disabled = false;
+
             
             data.forEach((item, i) => {
                 // 更新按鈕文字
