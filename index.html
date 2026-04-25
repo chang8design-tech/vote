@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情緒共感工作坊同步系統</title>
+    <title>情緒共感工作坊 - 隊伍同步系統</title>
     <style>
         body { 
             background-color: #121212; 
@@ -11,12 +11,39 @@
             font-family: "微軟正黑體", sans-serif; 
             margin: 0; 
             display: flex; 
+            flex-direction: column;
             align-items: center; 
-            justify-content: center; 
             min-height: 100vh; 
         }
 
-        /* 主容器：設定為相對定位，讓裡面的文字可以絕對定位 */
+        /* 隊伍選擇區 */
+        .team-selector {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .team-btn {
+            padding: 10px 20px;
+            border: 2px solid #444;
+            background: #222;
+            color: #888;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .team-btn.active {
+            border-color: #FFD700;
+            color: #FFD700;
+            background: #333;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        /* 主容器 */
         .image-container {
             position: relative;
             width: 90%;
@@ -33,73 +60,92 @@
             display: block;
         }
 
-        /* 文字標籤的通用樣式 */
+        /* 文字標籤樣式 */
         .emotion-label {
             position: absolute;
-            background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #FFD700;
-            font-size: 2vw; /* 隨螢幕縮放字體 */
+            font-size: 1.8vw;
             font-weight: bold;
-            min-width: 100px;
+            min-width: 120px;
             text-align: center;
-            backdrop-filter: blur(5px); /* 毛玻璃效果 */
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(5px);
         }
 
-        /* 定位四個角落 (距離邊緣 5%) */
         #pos1 { top: 5%; left: 5%; }    /* 左上 */
         #pos2 { bottom: 5%; left: 5%; } /* 左下 */
         #pos3 { top: 5%; right: 5%; }   /* 右上 */
         #pos4 { bottom: 5%; right: 5%; }/* 右下 */
 
-        /* 標號小字 */
-        .id-num {
-            font-size: 0.8rem;
-            color: #888;
-            display: block;
-            margin-bottom: 2px;
-        }
+        .id-num { font-size: 0.7rem; color: #666; display: block; }
+        .waiting { color: #555; font-style: italic; font-size: 0.9rem; }
 
-        /* 動畫效果 */
-        @keyframes highlight {
-            0% { transform: scale(1); border-color: gold; box-shadow: 0 0 0px gold; }
-            50% { transform: scale(1.2); border-color: white; box-shadow: 0 0 20px gold; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0px gold; }
+            50% { transform: scale(1.1); box-shadow: 0 0 15px gold; }
             100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div class="image-container">
-        <img src="hexagon_base.png" id="display-image" alt="Workshop Base">
+    <h2 style="color: #444; margin-top: 20px;">請選擇您的隊伍</h2>
+    
+    <div class="team-selector" id="team-selector">
+        <button class="team-btn" onclick="selectTeam(1)">第 1 隊</button>
+        <button class="team-btn" onclick="selectTeam(2)">第 2 隊</button>
+        <button class="team-btn" onclick="selectTeam(3)">第 3 隊</button>
+        <button class="team-btn" onclick="selectTeam(4)">第 4 隊</button>
+        <button class="team-btn" onclick="selectTeam(5)">第 5 隊</button>
+        <button class="team-btn" onclick="selectTeam(6)">第 6 隊</button>
+    </div>
 
-        <div id="pos1" class="emotion-label"><span class="id-num">① 左上</span><div id="text1">---</div></div>
-        <div id="pos2" class="emotion-label"><span class="id-num">② 左下</span><div id="text2">---</div></div>
-        <div id="pos3" class="emotion-label"><span class="id-num">③ 右上</span><div id="text3">---</div></div>
-        <div id="pos4" class="emotion-label"><span class="id-num">④ 右下</span><div id="text4">---</div></div>
+    <div class="image-container">
+        <img src="hexagon_base.png" id="display-image">
+
+        <div id="pos1" class="emotion-label"><span class="id-num">① 左上</span><div id="text1" class="waiting">⏳ 等待傳送...</div></div>
+        <div id="pos2" class="emotion-label"><span class="id-num">② 左下</span><div id="text2" class="waiting">⏳ 等待傳送...</div></div>
+        <div id="pos3" class="emotion-label"><span class="id-num">③ 右上</span><div id="text3" class="waiting">⏳ 等待傳送...</div></div>
+        <div id="pos4" class="emotion-label"><span class="id-num">④ 右下</span><div id="text4" class="waiting">⏳ 等待傳送...</div></div>
     </div>
 
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script>
+        let currentTeam = null;
         const ABLY_KEY = 'bHcXGQ.1E5LxA:MTgbAhdb5kDHqeL91xshPWSuAqZihv_SMGB0693bBZE';
         const ably = new Ably.Realtime(ABLY_KEY);
         const channel = ably.channels.get('workshop-sync');
 
+        function selectTeam(teamNum) {
+            currentTeam = teamNum;
+            // 更新 UI 按鈕狀態
+            const btns = document.querySelectorAll('.team-btn');
+            btns.forEach((btn, idx) => {
+                btn.classList.toggle('active', (idx + 1) === teamNum);
+            });
+            // 切換隊伍時清空舊文字
+            for(let i=1; i<=4; i++) {
+                document.getElementById('text' + i).innerHTML = '<span class="waiting">⏳ 等待傳送...</span>';
+            }
+            console.log("目前切換至第 " + teamNum + " 隊");
+        }
+
         channel.subscribe('update', (message) => {
             const data = message.data; 
-            const textElement = document.getElementById('text' + data.index);
-            const boxElement = document.getElementById('pos' + data.index);
-            
-            if (textElement) {
-                textElement.innerText = data.word;
-                // 觸發外框動畫
-                boxElement.style.animation = "none";
-                setTimeout(() => {
-                    boxElement.style.animation = "highlight 0.8s ease-out";
-                }, 10);
+            // 檢查訊息：只有當隊伍編號符合，或是訊息沒指定隊伍時才更新
+            if (currentTeam && data.team === currentTeam) {
+                const textElement = document.getElementById('text' + data.index);
+                const boxElement = document.getElementById('pos' + data.index);
+                
+                if (textElement) {
+                    textElement.innerText = data.word;
+                    textElement.classList.remove('waiting');
+                    boxElement.style.animation = "none";
+                    setTimeout(() => { boxElement.style.animation = "pulse 0.8s ease-out"; }, 10);
+                }
             }
         });
     </script>
