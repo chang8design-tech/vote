@@ -142,11 +142,20 @@
 
         function checkForm() {
             const team = document.getElementById('team-id').value;
-            const studentId = document.getElementById('student-id').value.trim();
+            const studentIdInput = document.getElementById('student-id');
+            let studentId = studentIdInput.value.trim();
             const btns = [0, 1, 2, 3].map(i => document.getElementById(`btn-${i}`));
 
-            // 必須滿足：尚未投票、隊伍不為空、學號不為空
-            const canVote = !hasVoted && team !== "" && studentId !== "";
+            // 檢查是否包含非數字字元
+            if (studentId !== "" && !/^\d+$/.test(studentId)) {
+                alert("學號格式錯誤：請只能輸入數字喔！");
+                // 自動過濾掉非數字字元，避免學生卡死
+                studentIdInput.value = studentId.replace(/\D/g, '');
+                studentId = studentIdInput.value;
+            }
+
+            // 必須滿足：尚未投票、隊伍不為空、學號長度至少 2 位數字
+            const canVote = !hasVoted && team !== "" && studentId.length >= 2 && /^\d+$/.test(studentId);
 
             btns.forEach(btn => {
                 if (btn) btn.disabled = !canVote;
