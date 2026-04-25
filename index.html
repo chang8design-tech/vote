@@ -54,11 +54,11 @@
             text-shadow: 2px 2px 5px #000, -2px -2px 5px #000, 2px -2px 5px #000, -2px 2px 5px #000;
             pointer-events: none; /* 防止遮擋點擊 */
         }
-        /* 微調座標以精確對準圖示中心 (幸運草, 紅雲, 紫心, 水滴) */
-        #pos-0 { top: 34%; left: 22%; transform: translate(-50%, -50%); }
-        #pos-1 { top: 34%; right: 22%; transform: translate(50%, -50%); }
-        #pos-2 { bottom: 34%; left: 22%; transform: translate(-50%, 50%); }
-        #pos-3 { bottom: 34%; right: 22%; transform: translate(50%, 50%); }
+        /* 微調座標：1-2 號往下移，3-4 號往上移 */
+        #pos-0 { top: 28%; left: 22%; transform: translate(-50%, -50%); }
+        #pos-1 { top: 28%; right: 22%; transform: translate(50%, -50%); }
+        #pos-2 { bottom: 28%; left: 22%; transform: translate(-50%, 50%); }
+        #pos-3 { bottom: 28%; right: 22%; transform: translate(50%, 50%); }
 
         .btn-container {
             display: grid;
@@ -76,6 +76,13 @@
             box-shadow: 0 5px #333;
         }
         button:active { transform: translateY(4px); box-shadow: 0 2px #111; }
+        /* 禁用狀態的樣式：變灰色且不可點擊 */
+        button:disabled {
+            background-color: #555 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
         .btn-1 { background-color: #FF5252; }
         .btn-2 { background-color: #FF9800; }
         .btn-3 { background-color: #4CAF50; }
@@ -96,8 +103,9 @@
     </div>
 
     <div class="team-selector">
-        <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">第一步：選擇您的隊伍</div>
-        <select id="team-id">
+        <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">第一步：填寫基本資料</div>
+        <select id="team-id" onchange="checkForm()">
+            <option value="" disabled selected>-- 請選擇您的隊伍 --</option>
             <option value="0">第 1 隊</option>
             <option value="1">第 2 隊</option>
             <option value="2">第 3 隊</option>
@@ -105,7 +113,7 @@
             <option value="4">第 5 隊</option>
             <option value="5">第 6 隊</option>
         </select>
-        <input type="text" id="student-id" placeholder="請輸入學號 (選填)" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
+        <input type="text" id="student-id" placeholder="請填寫學號" oninput="checkForm()" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
     </div>
 
     <div class="emotion-box">
@@ -119,10 +127,10 @@
     </div>
 
     <div class="btn-container">
-        <button class="btn-1" onclick="sendVote('①')" id="btn-0">① 等待抽籤</button>
-        <button class="btn-2" onclick="sendVote('②')" id="btn-1">② 等待抽籤</button>
-        <button class="btn-3" onclick="sendVote('③')" id="btn-2">③ 等待抽籤</button>
-        <button class="btn-4" onclick="sendVote('④')" id="btn-3">④ 等待抽籤</button>
+        <button class="btn-1" onclick="sendVote('①')" id="btn-0" disabled>① 鎖定中</button>
+        <button class="btn-2" onclick="sendVote('②')" id="btn-1" disabled>② 鎖定中</button>
+        <button class="btn-3" onclick="sendVote('③')" id="btn-2" disabled>③ 鎖定中</button>
+        <button class="btn-4" onclick="sendVote('④')" id="btn-3" disabled>④ 鎖定中</button>
     </div>
 
     <div id="status">正在同步戰場資訊...</div>
@@ -130,10 +138,25 @@
     <script>
         const ably = new Ably.Realtime('bHcXGQ.1E5LxA:MTgbAhdb5kDHqeL91xshPWSuAqZihv_SMGB0693bBZE');
         const channel = ably.channels.get('emotion-voting');
+        let hasVoted = false; // 紀錄當前回合是否已投票
+
+        function checkForm() {
+            const team = document.getElementById('team-id').value;
+            const studentId = document.getElementById('student-id').value.trim();
+            const btns = [0, 1, 2, 3].map(i => document.getElementById(`btn-${i}`));
+
+            // 必須滿足：尚未投票、隊伍不為空、學號不為空
+            const canVote = !hasVoted && team !== "" && studentId !== "";
+
+            btns.forEach(btn => {
+                if (btn) btn.disabled = !canVote;
+            });
+        }
 
         ably.connection.on('connected', () => { document.getElementById('status').innerText = '🟢 已連線至雲端戰場'; });
 
         channel.subscribe('update_labels', (msg) => {
+            hasVoted = false; // 新題目來了，重置投票狀態
             const data = msg.data.data;
             const list = document.getElementById('emotion-list');
             list.innerHTML = data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
@@ -147,13 +170,16 @@
                 const pos = document.getElementById(`pos-${i}`);
                 if(pos) pos.innerText = item.emotion;
             });
+
+            // 更新完標籤後檢查按鈕狀態
+            checkForm();
         });
 
         function sendVote(choice, idx) {
             const team = document.getElementById('team-id').value;
             const studentId = document.getElementById('student-id').value;
             
-            if (!team) {
+            if (!team || !studentId.trim()) {
                 alert("請先選擇您的隊伍！");
                 return;
             }
@@ -165,7 +191,15 @@
             };
 
             channel.publish('update', payload, (err) => { 
-                if(!err) alert(`隊伍 ${parseInt(team)+1} 投票成功！預測：${choice}`); 
+                if(!err) {
+                    alert(`隊伍 ${parseInt(team)+1} 投票成功！預測：${choice}`);
+                    hasVoted = true; // 標記為已投票
+                    // 將按鈕文字改成已投票狀態
+                    [0, 1, 2, 3].forEach(i => {
+                        document.getElementById(`btn-${i}`).innerText = "已完成預測";
+                    });
+                    checkForm(); // 鎖定所有按鈕
+                }
             });
         }
     </script>
