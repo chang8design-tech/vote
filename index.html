@@ -22,6 +22,22 @@
             border-radius: 15px;
             margin-bottom: 20px;
         }
+        .team-selector {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+        }
+        .team-selector select {
+            padding: 10px;
+            font-size: 1.1em;
+            background: #121212;
+            color: white;
+            border: 1px solid #F1C40F;
+            border-radius: 5px;
+            width: 80%;
+        }
         .emotion-box {
             background: #252525;
             border-radius: 10px;
@@ -52,23 +68,32 @@
             box-shadow: 0 5px #333;
         }
         button:active { transform: translateY(4px); box-shadow: 0 2px #111; }
-        .team-1 { background-color: #FF5252; }
-        .team-2 { background-color: #FF9800; }
-        .team-3 { background-color: #FFEB3B; color: #000; }
-        .team-4 { background-color: #4CAF50; }
-        .team-5 { background-color: #2196F3; }
-        .team-6 { background-color: #9C27B0; }
+        .btn-1 { background-color: #FF5252; }
+        .btn-2 { background-color: #FF9800; }
+        .btn-3 { background-color: #4CAF50; }
+        .btn-4 { background-color: #2196F3; }
         #status { margin-top: 30px; font-size: 0.8em; color: #555; }
     </style>
 </head>
 <body>
     <h2>🏆 共感戰場：即時投票</h2>
     
-    <!-- 呈現主程式用的底圖 (請確保圖片與 index.html 放在同個資料夾) -->
     <img src="hexagon_base.png" class="header-img" alt="戰場地圖" onerror="this.src='https://via.placeholder.com/350x350/333/F1C40F?text=Battlefield+Map'">
 
+    <div class="team-selector">
+        <div style="font-size: 0.9em; color: #aaa; margin-bottom: 8px;">第一步：選擇您的隊伍</div>
+        <select id="team-id">
+            <option value="0">第 1 隊</option>
+            <option value="1">第 2 隊</option>
+            <option value="2">第 3 隊</option>
+            <option value="3">第 4 隊</option>
+            <option value="4">第 5 隊</option>
+            <option value="5">第 6 隊</option>
+        </select>
+    </div>
+
     <div class="emotion-box">
-        <div style="font-size: 0.9em; color: #aaa;">目前抽出的隱藏情緒：</div>
+        <div style="font-size: 0.9em; color: #aaa;">第二步：預測隱藏情緒</div>
         <div id="emotion-list" class="emotion-grid">
             <div class="emotion-text">① 等待老師抽籤...</div>
             <div class="emotion-text">② 等待老師抽籤...</div>
@@ -78,12 +103,10 @@
     </div>
 
     <div class="btn-container">
-        <button class="team-1" onclick="sendVote('①')">第 1 隊</button>
-        <button class="team-2" onclick="sendVote('②')">第 2 隊</button>
-        <button class="team-3" onclick="sendVote('③')">第 3 隊</button>
-        <button class="team-4" onclick="sendVote('④')">第 4 隊</button>
-        <button class="team-5" onclick="sendVote('⑤')">第 5 隊</button>
-        <button class="team-6" onclick="sendVote('⑥')">第 6 隊</button>
+        <button class="btn-1" onclick="sendVote('①', 0)" id="btn-0">① 待抽籤</button>
+        <button class="btn-2" onclick="sendVote('②', 1)" id="btn-1">② 待抽籤</button>
+        <button class="btn-3" onclick="sendVote('③', 2)" id="btn-2">③ 待抽籤</button>
+        <button class="btn-4" onclick="sendVote('④', 3)" id="btn-3">④ 待抽籤</button>
     </div>
 
     <div id="status">正在同步戰場資訊...</div>
@@ -95,12 +118,25 @@
         ably.connection.on('connected', () => { document.getElementById('status').innerText = '🟢 已連線至雲端戰場'; });
 
         channel.subscribe('update_labels', (msg) => {
+            const data = msg.data.data;
             const list = document.getElementById('emotion-list');
-            list.innerHTML = msg.data.data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
+            list.innerHTML = data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
+            
+            data.forEach((item, i) => {
+                const btn = document.getElementById(`btn-${i}`);
+                if(btn) btn.innerText = `投給 ${["①","②","③","④"][i]}`;
+            });
         });
 
-        function sendVote(choice) {
-            channel.publish('update', { choice: choice }, (err) => { if(!err) alert('投票成功！您的預測是：' + choice); });
+        function sendVote(choice, idx) {
+            const team = document.getElementById('team-id').value;
+            const payload = { 
+                choice: choice, 
+                team: parseInt(team) 
+            };
+            channel.publish('update', payload, (err) => { 
+                if(!err) alert(`隊伍已確認！您預測的是：${choice}`); 
+            });
         }
     </script>
 </body>
