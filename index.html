@@ -37,7 +37,6 @@
             border: 1px solid #F1C40F;
             border-radius: 5px;
             width: 80%;
-            margin-top: 10px; /* Added margin for input */
         }
         .emotion-box {
             background: #252525;
@@ -69,8 +68,8 @@
             box-shadow: 0 5px #333;
         }
         button:active { transform: translateY(4px); box-shadow: 0 2px #111; }
-        .btn-1 { background-color: #FF5252; } /* Red */
-        .btn-2 { background-color: #FF9800; } /* Orange */
+        .btn-1 { background-color: #FF5252; }
+        .btn-2 { background-color: #FF9800; }
         .btn-3 { background-color: #4CAF50; }
         .btn-4 { background-color: #2196F3; }
         #status { margin-top: 30px; font-size: 0.8em; color: #555; }
@@ -91,7 +90,7 @@
             <option value="4">第 5 隊</option>
             <option value="5">第 6 隊</option>
         </select>
-        <input type="text" id="student-id" placeholder="請輸入學號 (選填)">
+        <input type="text" id="student-id" placeholder="請輸入學號 (選填)" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
     </div>
 
     <div class="emotion-box">
@@ -105,10 +104,10 @@
     </div>
 
     <div class="btn-container">
-        <button class="btn-1" onclick="sendVote('①', 0)" id="btn-0">① 待抽籤</button>
-        <button class="btn-2" onclick="sendVote('②', 1)" id="btn-1">② 待抽籤</button>
-        <button class="btn-3" onclick="sendVote('③', 2)" id="btn-2">③ 待抽籤</button>
-        <button class="btn-4" onclick="sendVote('④', 3)" id="btn-3">④ 待抽籤</button>
+        <button class="btn-1" onclick="sendVote('①')" id="btn-0">① 待抽籤</button>
+        <button class="btn-2" onclick="sendVote('②')" id="btn-1">② 待抽籤</button>
+        <button class="btn-3" onclick="sendVote('③')" id="btn-2">③ 待抽籤</button>
+        <button class="btn-4" onclick="sendVote('④')" id="btn-3">④ 待抽籤</button>
     </div>
 
     <div id="status">正在同步戰場資訊...</div>
@@ -126,18 +125,27 @@
             
             data.forEach((item, i) => {
                 const btn = document.getElementById(`btn-${i}`);
-                if(btn) btn.innerText = `投給 ${["①","②","③","④"][i]}`;
+                if(btn) btn.innerText = `${["①","②","③","④"][i]} ${item.emotion}`;
             });
         });
 
-        function sendVote(choice, idx) {
+        function sendVote(choice) {
             const team = document.getElementById('team-id').value;
-            const payload = { 
-                choice: choice, 
-                team: parseInt(team) 
+            const studentId = document.getElementById('student-id').value;
+            
+            if (!team) {
+                alert("請先選擇隊伍！");
+                return;
+            }
+
+            const payload = {
+                choice: choice,
+                team: parseInt(team),
+                studentId: studentId
             };
+
             channel.publish('update', payload, (err) => { 
-                if(!err) alert(`隊伍已確認！您預測的是：${choice}`); 
+                if(!err) alert(`隊伍 ${parseInt(team)+1} 投票成功！預測：${choice}`); 
             });
         }
     </script>
