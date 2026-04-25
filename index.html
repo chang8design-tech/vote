@@ -20,7 +20,14 @@
             max-width: 350px;
             border: 3px solid #F1C40F;
             border-radius: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+        }
+        /* 地圖容器，用於放置浮動文字 */
+        .map-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 350px;
         }
         .team-selector {
             background: #333;
@@ -38,20 +45,21 @@
             border-radius: 5px;
             width: 80%;
         }
-        .emotion-box {
-            background: #252525;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 25px;
-            border-left: 5px solid #F1C40F;
+        /* 讓文字浮動在圖片上 */
+        .emotion-overlay {
+            position: absolute;
+            color: #F1C40F;
+            font-size: 1em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+            pointer-events: none; /* 防止遮擋點擊 */
         }
-        .emotion-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .emotion-text { color: #F1C40F; font-size: 1.1em; font-weight: bold; }
+        /* 四個角落的位置設定 */
+        #pos-0 { top: 25%; left: 20%; }
+        #pos-1 { top: 25%; right: 20%; }
+        #pos-2 { bottom: 25%; left: 20%; }
+        #pos-3 { bottom: 25%; right: 20%; }
+
         .btn-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
