@@ -1,153 +1,109 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情緒共感工作坊 - 隊伍同步系統</title>
+    <title>共感戰場 - 手機投票頁面</title>
+    <!-- 引入 Ably SDK -->
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
-        body { 
-            background-color: #121212; 
-            color: #e0e0e0; 
-            font-family: "微軟正黑體", sans-serif; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            min-height: 100vh; 
-        }
-
-        /* 隊伍選擇區 */
-        .team-selector {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .team-btn {
-            padding: 10px 20px;
-            border: 2px solid #444;
-            background: #222;
-            color: #888;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .team-btn.active {
-            border-color: #FFD700;
-            color: #FFD700;
-            background: #333;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-        }
-
-        /* 主容器 */
-        .image-container {
-            position: relative;
-            width: 90%;
-            max-width: 800px;
-            border: 2px solid #333;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
-
-        img#display-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* 文字標籤樣式 */
-        .emotion-label {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #FFD700;
-            font-size: 1.8vw;
-            font-weight: bold;
-            min-width: 120px;
+        body {
+            font-family: "微軟正黑體", sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
             text-align: center;
-            backdrop-filter: blur(5px);
         }
-
-        #pos1 { top: 5%; left: 5%; }    /* 左上 */
-        #pos2 { bottom: 5%; left: 5%; } /* 左下 */
-        #pos3 { top: 5%; right: 5%; }   /* 右上 */
-        #pos4 { bottom: 5%; right: 5%; }/* 右下 */
-
-        .id-num { font-size: 0.7rem; color: #666; display: block; }
-        .waiting { color: #555; font-style: italic; font-size: 0.9rem; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0px gold; }
-            50% { transform: scale(1.1); box-shadow: 0 0 15px gold; }
-            100% { transform: scale(1); }
+        .header-img {
+            width: 100%;
+            max-width: 350px;
+            border: 3px solid #F1C40F;
+            border-radius: 15px;
+            margin-bottom: 20px;
         }
+        .emotion-box {
+            background: #252525;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #F1C40F;
+        }
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .emotion-text { color: #F1C40F; font-size: 1.1em; font-weight: bold; }
+        .btn-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        button {
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px #333;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 2px #111; }
+        .team-1 { background-color: #FF5252; }
+        .team-2 { background-color: #FF9800; }
+        .team-3 { background-color: #FFEB3B; color: #000; }
+        .team-4 { background-color: #4CAF50; }
+        .team-5 { background-color: #2196F3; }
+        .team-6 { background-color: #9C27B0; }
+        #status { margin-top: 30px; font-size: 0.8em; color: #555; }
     </style>
 </head>
 <body>
-
-    <h2 style="color: #444; margin-top: 20px;">請選擇您的隊伍</h2>
+    <h2>🏆 共感戰場：即時投票</h2>
     
-    <div class="team-selector" id="team-selector">
-        <button class="team-btn" onclick="selectTeam(1)">第 1 隊</button>
-        <button class="team-btn" onclick="selectTeam(2)">第 2 隊</button>
-        <button class="team-btn" onclick="selectTeam(3)">第 3 隊</button>
-        <button class="team-btn" onclick="selectTeam(4)">第 4 隊</button>
-        <button class="team-btn" onclick="selectTeam(5)">第 5 隊</button>
-        <button class="team-btn" onclick="selectTeam(6)">第 6 隊</button>
+    <!-- 呈現主程式用的底圖 (請確保圖片與 index.html 放在同個資料夾) -->
+    <img src="hexagon_base.png" class="header-img" alt="戰場地圖" onerror="this.src='https://via.placeholder.com/350x350/333/F1C40F?text=Battlefield+Map'">
+
+    <div class="emotion-box">
+        <div style="font-size: 0.9em; color: #aaa;">目前抽出的隱藏情緒：</div>
+        <div id="emotion-list" class="emotion-grid">
+            <div class="emotion-text">① 待出題</div>
+            <div class="emotion-text">② 待出題</div>
+            <div class="emotion-text">③ 待出題</div>
+            <div class="emotion-text">④ 待出題</div>
+            <div class="emotion-text">⑤ 待出題</div>
+            <div class="emotion-text">⑥ 待出題</div>
+        </div>
     </div>
 
-    <div class="image-container">
-        <img src="hexagon_base.png" id="display-image">
-
-        <div id="pos1" class="emotion-label"><span class="id-num">① 左上</span><div id="text1" class="waiting">⏳ 等待傳送...</div></div>
-        <div id="pos3" class="emotion-label"><span class="id-num">③ 右上</span><div id="text3" class="waiting">⏳ 等待傳送...</div></div>
-        <div id="pos2" class="emotion-label"><span class="id-num">② 左下</span><div id="text2" class="waiting">⏳ 等待傳送...</div></div>
-        <div id="pos4" class="emotion-label"><span class="id-num">④ 右下</span><div id="text4" class="waiting">⏳ 等待傳送...</div></div>
+    <div class="btn-container">
+        <button class="team-1" onclick="sendVote('①')">第 1 隊</button>
+        <button class="team-2" onclick="sendVote('②')">第 2 隊</button>
+        <button class="team-3" onclick="sendVote('③')">第 3 隊</button>
+        <button class="team-4" onclick="sendVote('④')">第 4 隊</button>
+        <button class="team-5" onclick="sendVote('⑤')">第 5 隊</button>
+        <button class="team-6" onclick="sendVote('⑥')">第 6 隊</button>
     </div>
 
-    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <div id="status">正在同步戰場資訊...</div>
+
     <script>
-        let currentTeam = null;
-        const ABLY_KEY = 'bHcXGQ.1E5LxA:MTgbAhdb5kDHqeL91xshPWSuAqZihv_SMGB0693bBZE';
-        const ably = new Ably.Realtime(ABLY_KEY);
-        const channel = ably.channels.get('workshop-sync');
+        const ably = new Ably.Realtime('bHcXGQ.1E5LxA:MTgbAhdb5kDHqeL91xshPWSuAqZihv_SMGB0693bBZE');
+        const channel = ably.channels.get('emotion-voting');
 
-        function selectTeam(teamNum) {
-            currentTeam = teamNum;
-            // 更新 UI 按鈕狀態
-            const btns = document.querySelectorAll('.team-btn');
-            btns.forEach((btn, idx) => {
-                btn.classList.toggle('active', (idx + 1) === teamNum);
-            });
-            // 切換隊伍時清空舊文字
-            for(let i=1; i<=4; i++) {
-                document.getElementById('text' + i).innerHTML = '<span class="waiting">⏳ 等待傳送...</span>';
-            }
-            console.log("目前切換至第 " + teamNum + " 隊");
-        }
+        ably.connection.on('connected', () => { document.getElementById('status').innerText = '🟢 已連線至雲端戰場'; });
 
-        channel.subscribe('update', (message) => {
-            const data = message.data; 
-            // 檢查訊息：只有當隊伍編號符合，或是訊息沒指定隊伍時才更新
-            if (currentTeam && data.team === currentTeam) {
-                const textElement = document.getElementById('text' + data.index);
-                const boxElement = document.getElementById('pos' + data.index);
-                
-                if (textElement) {
-                    textElement.innerText = data.word;
-                    textElement.classList.remove('waiting');
-                    boxElement.style.animation = "none";
-                    setTimeout(() => { boxElement.style.animation = "pulse 0.8s ease-out"; }, 10);
-                }
-            }
+        channel.subscribe('update_labels', (msg) => {
+            const list = document.getElementById('emotion-list');
+            list.innerHTML = msg.data.data.map((item, i) => `<div class="emotion-text">${["①","②","③","④","⑤","⑥"][i]} ${item.emotion}</div>`).join('');
         });
+
+        function sendVote(choice) {
+            channel.publish('update', { choice: choice }, (err) => { if(!err) alert('投票成功！您的預測是：' + choice); });
+        }
     </script>
 </body>
 </html>
