@@ -5,33 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>情緒共感工作坊同步系統</title>
     <style>
-        /* 整體背景設定 */
         body { 
             background-color: #121212; 
             color: #e0e0e0; 
-            font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif; 
+            font-family: "微軟正黑體", sans-serif; 
             margin: 0; 
             display: flex; 
-            flex-direction: column; 
             align-items: center; 
             justify-content: center; 
             min-height: 100vh; 
         }
 
-        /* 內容容器 */
-        .wrapper { width: 90%; max-width: 800px; text-align: center; }
-
-        /* 標題樣式 */
-        h1 { font-size: 1.2rem; color: #555; letter-spacing: 2px; margin-bottom: 20px; }
-
-        /* 底圖容器 */
+        /* 主容器：設定為相對定位，讓裡面的文字可以絕對定位 */
         .image-container {
-            width: 100%;
+            position: relative;
+            width: 90%;
+            max-width: 800px;
             border: 2px solid #333;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            background: #000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
         img#display-image {
@@ -40,63 +33,53 @@
             display: block;
         }
 
-        /* 下方文字顯示區 */
-        .status-row {
-            display: flex;
-            background: #1e1e1e;
-            margin-top: -10px; /* 稍微與圖片重疊或緊貼 */
-            padding: 20px 0;
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 15px;
-            border: 2px solid #333;
-            border-top: none;
-        }
-
-        .slot {
-            flex: 1;
-            border-right: 1px solid #333;
-        }
-
-        .slot:last-child { border-right: none; }
-
-        .label {
-            font-size: 14px;
-            color: #666;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .word {
-            font-size: 26px;
+        /* 文字標籤的通用樣式 */
+        .emotion-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #FFD700;
+            font-size: 2vw; /* 隨螢幕縮放字體 */
             font-weight: bold;
-            color: #FFD700; /* 亮黃色文字 */
-            min-height: 36px;
-            transition: all 0.5s ease;
+            min-width: 100px;
+            text-align: center;
+            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* 文字跳動動畫 */
-        @keyframes pop {
-            0% { transform: scale(1); color: #FFF; }
-            50% { transform: scale(1.3); color: #FFD700; }
+        /* 定位四個角落 (距離邊緣 5%) */
+        #pos1 { top: 5%; left: 5%; }    /* 左上 */
+        #pos2 { bottom: 5%; left: 5%; } /* 左下 */
+        #pos3 { top: 5%; right: 5%; }   /* 右上 */
+        #pos4 { bottom: 5%; right: 5%; }/* 右下 */
+
+        /* 標號小字 */
+        .id-num {
+            font-size: 0.8rem;
+            color: #888;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* 動畫效果 */
+        @keyframes highlight {
+            0% { transform: scale(1); border-color: gold; box-shadow: 0 0 0px gold; }
+            50% { transform: scale(1.2); border-color: white; box-shadow: 0 0 20px gold; }
             100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div class="wrapper">
-        <h1>REAL-TIME EMOTION SYNC</h1>
+    <div class="image-container">
+        <img src="hexagon_base.png" id="display-image" alt="Workshop Base">
 
-        <div class="image-container">
-            <img src="hexagon_base.png" id="display-image" alt="Workshop Base">
-        </div>
-
-        <div class="status-row">
-            <div class="slot"><span class="label">①</span><div id="text1" class="word">---</div></div>
-            <div class="slot"><span class="label">②</span><div id="text2" class="word">---</div></div>
-            <div class="slot"><span class="label">③</span><div id="text3" class="word">---</div></div>
-            <div class="slot"><span class="label">④</span><div id="text4" class="word">---</div></div>
-        </div>
+        <div id="pos1" class="emotion-label"><span class="id-num">① 左上</span><div id="text1">---</div></div>
+        <div id="pos2" class="emotion-label"><span class="id-num">② 左下</span><div id="text2">---</div></div>
+        <div id="pos3" class="emotion-label"><span class="id-num">③ 右上</span><div id="text3">---</div></div>
+        <div id="pos4" class="emotion-label"><span class="id-num">④ 右下</span><div id="text4">---</div></div>
     </div>
 
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
@@ -105,16 +88,17 @@
         const ably = new Ably.Realtime(ABLY_KEY);
         const channel = ably.channels.get('workshop-sync');
 
-        // 訂閱同步訊息
         channel.subscribe('update', (message) => {
             const data = message.data; 
-            const target = document.getElementById('text' + data.index);
-            if (target) {
-                target.innerText = data.word;
-                // 加入更新動畫
-                target.style.animation = "none";
+            const textElement = document.getElementById('text' + data.index);
+            const boxElement = document.getElementById('pos' + data.index);
+            
+            if (textElement) {
+                textElement.innerText = data.word;
+                // 觸發外框動畫
+                boxElement.style.animation = "none";
                 setTimeout(() => {
-                    target.style.animation = "pop 0.6s ease-out";
+                    boxElement.style.animation = "highlight 0.8s ease-out";
                 }, 10);
             }
         });
