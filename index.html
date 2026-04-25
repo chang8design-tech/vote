@@ -104,10 +104,10 @@
     </div>
 
     <div class="btn-container">
-        <button class="btn-1" onclick="sendVote('①')" id="btn-0">① 待抽籤</button>
-        <button class="btn-2" onclick="sendVote('②')" id="btn-1">② 待抽籤</button>
-        <button class="btn-3" onclick="sendVote('③')" id="btn-2">③ 待抽籤</button>
-        <button class="btn-4" onclick="sendVote('④')" id="btn-3">④ 待抽籤</button>
+        <button class="btn-1" onclick="sendVote('①')" id="btn-0">① 等待抽籤</button>
+        <button class="btn-2" onclick="sendVote('②')" id="btn-1">② 等待抽籤</button>
+        <button class="btn-3" onclick="sendVote('③')" id="btn-2">③ 等待抽籤</button>
+        <button class="btn-4" onclick="sendVote('④')" id="btn-3">④ 等待抽籤</button>
     </div>
 
     <div id="status">正在同步戰場資訊...</div>
@@ -129,12 +129,12 @@
             });
         });
 
-        function sendVote(choice) {
+        function sendVote(choice, idx) {
             const team = document.getElementById('team-id').value;
             const studentId = document.getElementById('student-id').value;
             
             if (!team) {
-                alert("請先選擇隊伍！");
+                alert("請先選擇您的隊伍！");
                 return;
             }
 
