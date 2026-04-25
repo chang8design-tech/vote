@@ -83,6 +83,12 @@
             box-shadow: none;
             opacity: 0.6;
         }
+        #confirm-btn {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background-color: #F1C40F;
+            font-size: 1.1em;
+        }
         .btn-1 { background-color: #FF5252; }
         .btn-2 { background-color: #FF9800; }
         .btn-3 { background-color: #4CAF50; }
@@ -114,6 +120,8 @@
             <option value="5">第 6 隊</option>
         </select>
         <input type="text" id="student-id" placeholder="請填寫學號" oninput="checkForm()" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
+        <button id="confirm-btn" onclick="confirmInfo()" disabled>確定身分</button>
+        <div id="info-status" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
 
     <div class="emotion-box">
@@ -141,12 +149,13 @@
         let hasVoted = false;         // 紀錄當前回合是否已投票
         let emotionsReceived = false; // 新增：紀錄是否已收到情緒資料
         let currentEmotionsData = []; // 新增：儲存當前的情緒資料
+        let identityConfirmed = false; // 身分是否已按下確定
 
         function checkForm() {
             const team = document.getElementById('team-id').value;
             const studentIdInput = document.getElementById('student-id');
             let studentId = studentIdInput.value.trim();
-            const btns = [0, 1, 2, 3].map(i => document.getElementById(`btn-${i}`));
+            const confirmBtn = document.getElementById('confirm-btn');
 
             // 檢查是否包含非數字字元
             if (studentId !== "" && !/^\d+$/.test(studentId)) {
@@ -156,18 +165,37 @@
                 studentId = studentIdInput.value;
             }
 
-            // 必須滿足：尚未投票、隊伍不為空、學號長度至少 2 位數字、且已收到情緒資料
-            const canVote = !hasVoted && team !== "" && studentId.length >= 2 && /^\d+$/.test(studentId) && emotionsReceived;
+            // 確定按鈕解鎖條件：隊伍已選且學號至少兩碼
+            confirmBtn.disabled = !(team !== "" && studentId.length >= 2);
+        }
 
-            btns.forEach(btn => {
-                if (btn) btn.disabled = !canVote;
+        function confirmInfo() {
+            const infoStatus = document.getElementById('info-status');
+            identityConfirmed = true;
+            
+            if (!emotionsReceived) {
+                infoStatus.innerText = "身分已確認！請等待新情緒抽籤...";
+                infoStatus.style.color = "#F1C40F";
+            } else {
+                infoStatus.innerText = "身分已確認，可以答題！";
+                infoStatus.style.color = "#4CAF50";
+                enableVoteButtons();
+            }
+        }
+
+        function enableVoteButtons() {
+            // 解鎖條件：身分已確認、已收到情緒、且本回合尚未投票
+            if (!identityConfirmed || !emotionsReceived || hasVoted) return;
+            [0, 1, 2, 3].forEach(i => {
+                const btn = document.getElementById(`btn-${i}`);
+                if (btn) btn.disabled = false;
             });
         }
 
         ably.connection.on('connected', () => { document.getElementById('status').innerText = '🟢 已連線至雲端戰場'; });
         
         channel.subscribe('update_labels', (msg) => {
-            hasVoted = false;         // 新題目來了，重置投票狀態
+            hasVoted = false;         // 新題目重置
             emotionsReceived = true;  // 已收到情緒資料
             const data = msg.data.data;
             currentEmotionsData = data; // 儲存情緒資料
@@ -184,16 +212,21 @@
                 if(pos) pos.innerText = item.emotion;
             });
 
-            // 更新完標籤後檢查按鈕狀態
-            checkForm();
+            // 如果身分已經確定過，自動嘗試解鎖按鈕
+            if (identityConfirmed) {
+                confirmInfo();
+            } else {
+                checkForm();
+            }
         });
 
         function sendVote(choice, idx) {
             const team = document.getElementById('team-id').value;
             const studentId = document.getElementById('student-id').value;
+            const infoStatus = document.getElementById('info-status');
             
-            if (!team || !studentId.trim()) {
-                alert("請先選擇您的隊伍！");
+            if (!team || !studentId.trim() || !identityConfirmed) {
+                alert("請先完成身分確認！");
                 return;
             }
 
@@ -205,13 +238,19 @@
 
             channel.publish('update', payload, (err) => { 
                 if(!err) {
-                    alert(`隊伍 ${parseInt(team)+1} 投票成功！預測：${choice}`);
+                    const emotionIndex = ["①", "②", "③", "④"].indexOf(choice);
+                    const emotionWord = currentEmotionsData[emotionIndex] ? currentEmotionsData[emotionIndex].emotion : "";
+                    
+                    alert(`第 ${parseInt(team)+1} 隊 (學號 ${studentId}) 投票成功！\n您預測的是：${choice} ${emotionWord}`);
+                    
                     hasVoted = true; // 標記為已投票
-                    // 將按鈕文字改成已投票狀態
                     [0, 1, 2, 3].forEach(i => {
-                        document.getElementById(`btn-${i}`).innerText = "已完成預測";
+                        const btn = document.getElementById(`btn-${i}`);
+                        btn.innerText = "已完成預測";
+                        btn.disabled = true;
                     });
-                    checkForm(); // 鎖定所有按鈕
+                    infoStatus.innerText = "本回合預測已完成，請等待新挑戰";
+                    infoStatus.style.color = "#888";
                 }
             });
         }
