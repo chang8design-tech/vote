@@ -2,50 +2,100 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>情緒共感即時同步</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情緒共感工作坊同步系統</title>
     <style>
-        body { background-color: #1a1a1a; color: white; font-family: "微軟正黑體", sans-serif; text-align: center; margin: 0; padding: 20px; }
-        
-        /* 容器：固定寬度並居中 */
-        .container { max-width: 800px; margin: auto; position: relative; }
-
-        /* 主圖設定 */
-        .main-image-wrapper { position: relative; width: 100%; border: 3px solid #333; border-radius: 12px; overflow: hidden; }
-        img#main-bg { width: 100%; display: block; }
-
-        /* 文字同步區域：排成一列在圖片下方 */
-        .status-bar { 
+        /* 整體背景設定 */
+        body { 
+            background-color: #121212; 
+            color: #e0e0e0; 
+            font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif; 
+            margin: 0; 
             display: flex; 
-            justify-content: space-around; 
-            margin-top: 20px; 
-            background: #222; 
-            padding: 15px; 
-            border-radius: 10px;
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
         }
 
-        .slot { flex: 1; border-right: 1px solid #444; }
+        /* 內容容器 */
+        .wrapper { width: 90%; max-width: 800px; text-align: center; }
+
+        /* 標題樣式 */
+        h1 { font-size: 1.2rem; color: #555; letter-spacing: 2px; margin-bottom: 20px; }
+
+        /* 底圖容器 */
+        .image-container {
+            width: 100%;
+            border: 2px solid #333;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        img#display-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 下方文字顯示區 */
+        .status-row {
+            display: flex;
+            background: #1e1e1e;
+            margin-top: -10px; /* 稍微與圖片重疊或緊貼 */
+            padding: 20px 0;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            border: 2px solid #333;
+            border-top: none;
+        }
+
+        .slot {
+            flex: 1;
+            border-right: 1px solid #333;
+        }
+
         .slot:last-child { border-right: none; }
 
-        .id-badge { font-size: 18px; color: #888; display: block; margin-bottom: 5px; }
-        .emotion-text { font-size: 24px; font-weight: bold; color: #FFD700; }
-        
-        h1 { color: #555; font-size: 1.2rem; }
+        .label {
+            font-size: 14px;
+            color: #666;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .word {
+            font-size: 26px;
+            font-weight: bold;
+            color: #FFD700; /* 亮黃色文字 */
+            min-height: 36px;
+            transition: all 0.5s ease;
+        }
+
+        /* 文字跳動動畫 */
+        @keyframes pop {
+            0% { transform: scale(1); color: #FFF; }
+            50% { transform: scale(1.3); color: #FFD700; }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>情緒共感即時同步</h1>
-        
-        <div class="main-image-wrapper">
-            <img src="bg.png" id="main-bg" alt="工作坊底圖">
+    <div class="wrapper">
+        <h1>REAL-TIME EMOTION SYNC</h1>
+
+        <div class="image-container">
+            <img src="hexagon_base.png" id="display-image" alt="Workshop Base">
         </div>
 
-        <div class="status-bar">
-            <div class="slot"><span class="id-badge">①</span><div id="text1" class="emotion-text">---</div></div>
-            <div class="slot"><span class="id-badge">②</span><div id="text2" class="emotion-text">---</div></div>
-            <div class="slot"><span class="id-badge">③</span><div id="text3" class="emotion-text">---</div></div>
-            <div class="slot"><span class="id-badge">④</span><div id="text4" class="emotion-text">---</div></div>
+        <div class="status-row">
+            <div class="slot"><span class="label">①</span><div id="text1" class="word">---</div></div>
+            <div class="slot"><span class="label">②</span><div id="text2" class="word">---</div></div>
+            <div class="slot"><span class="label">③</span><div id="text3" class="word">---</div></div>
+            <div class="slot"><span class="label">④</span><div id="text4" class="word">---</div></div>
         </div>
     </div>
 
@@ -55,14 +105,17 @@
         const ably = new Ably.Realtime(ABLY_KEY);
         const channel = ably.channels.get('workshop-sync');
 
+        // 訂閱同步訊息
         channel.subscribe('update', (message) => {
             const data = message.data; 
             const target = document.getElementById('text' + data.index);
             if (target) {
                 target.innerText = data.word;
-                // 更新時的特效
-                target.style.color = "#FFF";
-                setTimeout(() => { target.style.color = "#FFD700"; }, 500);
+                // 加入更新動畫
+                target.style.animation = "none";
+                setTimeout(() => {
+                    target.style.animation = "pop 0.6s ease-out";
+                }, 10);
             }
         });
     </script>
