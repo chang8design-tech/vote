@@ -70,12 +70,10 @@
     <div class="emotion-box">
         <div style="font-size: 0.9em; color: #aaa;">目前抽出的隱藏情緒：</div>
         <div id="emotion-list" class="emotion-grid">
-            <div class="emotion-text">① 待出題</div>
-            <div class="emotion-text">② 待出題</div>
-            <div class="emotion-text">③ 待出題</div>
-            <div class="emotion-text">④ 待出題</div>
-            <div class="emotion-text">⑤ 待出題</div>
-            <div class="emotion-text">⑥ 待出題</div>
+            <div class="emotion-text">① 等待老師抽籤...</div>
+            <div class="emotion-text">② 等待老師抽籤...</div>
+            <div class="emotion-text">③ 等待老師抽籤...</div>
+            <div class="emotion-text">④ 等待老師抽籤...</div>
         </div>
     </div>
 
@@ -98,7 +96,7 @@
 
         channel.subscribe('update_labels', (msg) => {
             const list = document.getElementById('emotion-list');
-            list.innerHTML = msg.data.data.map((item, i) => `<div class="emotion-text">${["①","②","③","④","⑤","⑥"][i]} ${item.emotion}</div>`).join('');
+            list.innerHTML = msg.data.data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
         });
 
         function sendVote(choice) {
