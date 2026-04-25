@@ -124,21 +124,11 @@
         <div id="info-status" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
 
-    <div class="emotion-box">
-        <div style="font-size: 0.9em; color: #aaa;">第二步：預測隱藏情緒</div>
-        <div id="emotion-list" class="emotion-grid">
-            <div class="emotion-text">① 等待老師抽籤...</div>
-            <div class="emotion-text">② 等待老師抽籤...</div>
-            <div class="emotion-text">③ 等待老師抽籤...</div>
-            <div class="emotion-text">④ 等待老師抽籤...</div>
-        </div>
-    </div>
-
     <div class="btn-container">
-        <button class="btn-1" onclick="sendVote('①')" id="btn-0" disabled>① 鎖定中</button>
-        <button class="btn-2" onclick="sendVote('②')" id="btn-1" disabled>② 鎖定中</button>
-        <button class="btn-3" onclick="sendVote('③')" id="btn-2" disabled>③ 鎖定中</button>
-        <button class="btn-4" onclick="sendVote('④')" id="btn-3" disabled>④ 鎖定中</button>
+        <button class="btn-1" onclick="sendVote('①')" id="btn-0" disabled>等待發送情緒抽籤</button>
+        <button class="btn-2" onclick="sendVote('②')" id="btn-1" disabled>等待發送情緒抽籤</button>
+        <button class="btn-3" onclick="sendVote('③')" id="btn-2" disabled>等待發送情緒抽籤</button>
+        <button class="btn-4" onclick="sendVote('④')" id="btn-3" disabled>等待發送情緒抽籤</button>
     </div>
 
     <div id="status">正在同步戰場資訊...</div>
@@ -199,8 +189,6 @@
             emotionsReceived = true;  // 已收到情緒資料
             const data = msg.data.data;
             currentEmotionsData = data; // 儲存情緒資料
-            const list = document.getElementById('emotion-list');
-            list.innerHTML = data.map((item, i) => `<div class="emotion-text">${["①","②","③","④"][i]} ${item.emotion}</div>`).join('');
             
             data.forEach((item, i) => {
                 // 更新按鈕文字
