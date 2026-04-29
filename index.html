@@ -133,7 +133,7 @@
             <option value="4">第 5 隊</option>
             <option value="5">第 6 隊</option>
         </select>
-        <input type="text" id="student-id" placeholder="請填寫學號" oninput="checkForm()" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
+        <input type="text" id="student-id" placeholder="請填寫代號" oninput="checkForm()" style="padding: 10px; margin-top: 10px; width: 75%; border-radius: 5px; border: 1px solid #F1C40F; background: #121212; color: white;">
         <button id="confirm-btn" onclick="confirmInfo()" disabled>確定身分</button>
         <div id="info-status" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
@@ -163,7 +163,7 @@
 
             // 檢查是否包含非數字字元
             if (studentId !== "" && !/^\d+$/.test(studentId)) {
-                alert("學號格式錯誤：請只能輸入數字喔！");
+                alert("代號格式錯誤：請只能輸入數字喔！");
                 // 自動過濾掉非數字字元，避免學生卡死
                 studentIdInput.value = studentId.replace(/\D/g, '');
                 studentId = studentIdInput.value;
