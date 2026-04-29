@@ -149,7 +149,8 @@
 
     <script>
         const ably = new Ably.Realtime('bHcXGQ.1E5LxA:MTgbAhdb5kDHqeL91xshPWSuAqZihv_SMGB0693bBZE');
-        const channel = ably.channels.get('emotion-voting');
+        // 使用 rewind: '1' 讓晚進來的裝置能自動獲取最後一筆題目資料
+        const channel = ably.channels.get('emotion-voting', { params: { rewind: '1' } });
         let hasVoted = false;         // 紀錄當前回合是否已投票
         let emotionsReceived = false; // 新增：紀錄是否已收到情緒資料
         let currentEmotionsData = []; // 新增：儲存當前的情緒資料
